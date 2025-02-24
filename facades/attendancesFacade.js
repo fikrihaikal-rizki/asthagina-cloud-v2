@@ -3,9 +3,9 @@ import {
   setInitSheet,
   sheetLoop,
   getSheetValue,
-  isLimitLoop,
   setApiKey,
 } from "../helpers/sheetHelper.js";
+import { STATUS_SYNCED } from "../helpers/statusHelper.js";
 import { attendancesRepository } from "../repositories/attendacesRepository.js";
 
 export class attendancesFacade {
@@ -15,7 +15,7 @@ export class attendancesFacade {
     this.sheetAttendanceId = project.sheetAttendanceId;
   }
 
-  async sync() {
+  async sync(revoke = false) {
     setApiKey(this.apiKey);
     setInitSheet(this.sheetAttendanceId, 2);
 
@@ -29,19 +29,15 @@ export class attendancesFacade {
         loop.lastIndex
       );
 
+      const attendancesRepo = new attendancesRepository(this.projectName);
+
       if (data.length == 0) {
+        await attendancesRepo.setSyncStatus(STATUS_SYNCED);
         break;
       }
 
       var attendances = attendancesDto(data);
-      const attendancesRepo = new attendancesRepository(this.projectName);
-      attendancesRepo.sync(attendances);
-
-      if (isLimitLoop()) {
-        break;
-      }
-
-      break;
+      attendancesRepo.sync(attendances, revoke);
     }
   }
 }

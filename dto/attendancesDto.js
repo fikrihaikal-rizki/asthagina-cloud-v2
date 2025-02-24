@@ -8,12 +8,17 @@ export default function (data) {
       "Nama blok": item[4],
       "Nomor blok": item[5],
       "Nomor kamar": item[6],
-      "QR Code ID": item[14],
+      "QR Code ID": ""
     };
 
-    if (item[14] != "") {
-      attendances[item[14]] = body;
-    }
+    var blok = item[4];
+    var nomor = item[5].padStart(2, "0");
+    var kamar = item[6].replace("Kamar ", "");
+    kamar = kamar.padStart(2, "0");
+    var telephone = item[2];
+    var id = blok + "-" + nomor + "-" + kamar + "-" + telephone;
+
+    attendances[id] = body;
   });
 
   return attendances;

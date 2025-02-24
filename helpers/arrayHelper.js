@@ -1,9 +1,11 @@
 export function toArrayChunk(chunkSize, data) {
   var chunks = [];
 
-  for (var i = 0; i < data.length; i += chunkSize) {
+  var i = 0;
+  for (i; i <= data.length; i = i + chunkSize) {
     var chunk = [];
-    for (var j = i; j < i + chunkSize && j < data.length; j++) {
+    var j = parseInt(i);
+    for (j; j < i + chunkSize && j < data.length; j++) {
       chunk.push(data[j]);
     }
 

@@ -4,6 +4,9 @@ export const STATUS_SYNCING = "Syncing";
 export const STATUS_GENERATED = "Generated"; 
 export const STATUS_GENERATING = "Generating"; 
 
+export const STATUS_ACTIVE = "Active"; 
+export const STATUS_INACTIVE = "Inactive";
+
 export function isReady(status) {
   if ((status == STATUS_SYNCED)) {
     return true;

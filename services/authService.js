@@ -46,3 +46,19 @@ export const verifyToken = (req, res, next) => {
     next();
   });
 };
+
+export const verifyHash = (req, res, next) => {
+  var token = req.headers["authorization"];
+  if (!token) {
+    return res.status(401).json({ error: "Unauthorized" });
+  }
+
+  token = token.replace("Bearer ", "");
+  jwt.verify(token, process.env.COUPON_KEY, (err, decoded) => {
+    if (err) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+    req.user = decoded;
+    next();
+  });
+};

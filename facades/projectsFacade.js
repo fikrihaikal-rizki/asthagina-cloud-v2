@@ -1,6 +1,5 @@
-import projectsDto from "../dto/projectsDto.js";
 import usersDto from "../dto/usersDto.js";
-import { attendancesFacade } from "../facades/attendancesFacade.js";
+import { attendancesFacade } from "./attendancesFacade.js";
 import resultHelper from "../helpers/resultHelper.js";
 import {
   setInitSheet,
@@ -8,16 +7,13 @@ import {
   getSheetValue,
   isLimitLoop,
 } from "../helpers/sheetHelper.js";
-import { isReady, STATUS_SYNCED, STATUS_SYNCING } from "../helpers/statusHelper.js";
+import { isReady, STATUS_SYNCING } from "../helpers/statusHelper.js";
 import { attendancesRepository } from "../repositories/attendacesRepository.js";
 import { projectsRepository } from "../repositories/projectsRepository.js";
-import { syncRepository } from "../repositories/syncRepository.js";
 import { usersRepository } from "../repositories/usersRepository.js";
 
-export class syncService {
-  async users(res) {
-    const syncRepo = new syncRepository;
-    await syncRepo.setSyncStatus(STATUS_SYNCING, "Users");
+export class usersService {
+  async sync() {
     setInitSheet(process.env.SHEET_MAIN_ID, 2);
 
     while (true) {
@@ -42,41 +38,6 @@ export class syncService {
         break;
       }
     }
-
-    await syncRepo.setSyncStatus(STATUS_SYNCED, "Users");
-    return res.status(200).send(resultHelper(200, "Success"));
-  }
-
-  async projects(res) {
-    const syncRepo = new syncRepository;
-    await syncRepo.setSyncStatus(STATUS_SYNCING, "Projects");
-    setInitSheet(process.env.SHEET_MAIN_ID, 2);
-
-    while (true) {
-      var loop = sheetLoop(20);
-      var data = await getSheetValue(
-        "'Projects'",
-        "A",
-        "D",
-        loop.firstIndex,
-        loop.lastIndex
-      );
-
-      if (data.length == 0) {
-        break;
-      }
-      
-      var projects = projectsDto(data);
-      const projectsRepo = new projectsRepository();
-      projectsRepo.sync(projects);
-
-      if (isLimitLoop()) {
-        break;
-      }
-    }
-
-    await syncRepo.setSyncStatus(STATUS_SYNCED, "Projects");
-    return res.status(200).send(resultHelper(200, "Success"));
   }
 
   async attendances(req, res) {
@@ -89,8 +50,8 @@ export class syncService {
       const attendancesRepo = new attendancesRepository(project.projectName);
       const sync = await attendancesRepo.findAttendancesSync();
 
-      if (!isReady(sync.status)) {
-        return res.status(400).send(resultHelper(400, "Still " + sync.status));
+      if (!isReady(sync.sync)) {
+        return res.status(400).send(resultHelper(400, "Still " + sync.sync));
       }
 
       await attendancesRepo.setSyncStatus(STATUS_SYNCING);

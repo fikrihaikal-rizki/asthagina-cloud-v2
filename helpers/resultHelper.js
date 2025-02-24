@@ -1,3 +1,5 @@
+import { getDateTimeNow } from "./dateHelper.js";
+
 export default function (code = 200, message = "", data = null) {
   var body = {
     status: true,
@@ -11,6 +13,8 @@ export default function (code = 200, message = "", data = null) {
   if (data != null) {
     body.data = data;
   }
+
+  body.date = getDateTimeNow();
 
   return body;
 }
