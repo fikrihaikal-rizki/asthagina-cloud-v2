@@ -125,7 +125,7 @@ export class attendancesService {
     } catch (error) {
       return res
         .status(400)
-        .send(resultHelper(400, "Failed get generate Attendance id"));
+        .send(resultHelper(400, "Failed get generate Attendance id", error));
     }
   }
 
