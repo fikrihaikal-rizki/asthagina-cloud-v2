@@ -11,17 +11,29 @@ export class attendancesService {
   async take(req, res) {
     try {
       const attendancesRepo = new attendancesRepository(req.user.projectName);
-      const attendance = await attendancesRepo.findByQrId(req.body.qrId);
+      const attendances = await attendancesRepo.findByQrId(req.body.qrId);
+
+      var keys = Object.keys(attendances);
+
+      if (keys.length == 0) {
+        return res.status(400).send(resultHelper(400, "Data not found!"));
+      }
+
+      var attendance = null;
+      keys.forEach((item) => {
+        attendance = attendances[item];
+        attendance.id = item;
+      });
 
       if (attendance == null) {
-        return res.status(400).send(resultHelper(400, "Not found!"));
+        return res.status(400).send(resultHelper(400, "Data not found!"));
       }
 
       const reportsRepo = new reportsRepository(req.user.projectName);
-      const report = await reportsRepo.findTodayByQrId(req.body.qrId);
+      const report = await reportsRepo.findTodayById(attendance.id);
 
       if (report != null) {
-        return res.status(400).send(resultHelper(400, "Already taken"));
+        return res.status(400).send(resultHelper(400, "Already taken!"));
       }
 
       await reportsRepo.takeAttendance(attendance);
@@ -86,7 +98,6 @@ export class attendancesService {
         }
 
         const jwt = jsonwebtoken;
-        const secret = process.env.APP_KEY;
 
         var keyItem = null;
         var attend = null;
@@ -131,7 +142,10 @@ export class attendancesService {
         return res.status(400).send(resultHelper(400, "Coupon not found"));
       }
 
-      return res.status(200).send(resultHelper(200, "Success", attendance));
+      var report = reportAttendanceDto(attendance);
+      report["QR Code ID"] = attendance["QR Code ID"];
+
+      return res.status(200).send(resultHelper(200, "Success", report));
     } catch (error) {
       return res.status(400).send(resultHelper(400, "Failed find coupon"));
     }

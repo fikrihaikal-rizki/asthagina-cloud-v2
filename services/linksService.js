@@ -82,7 +82,7 @@ export class linksService {
           resultHelper(
             200,
             "Success",
-            process.env.COUPON_BASE_URL + currentActive
+            process.env.COUPON_BASE_URL + "l/" + currentActive
           )
         );
     } catch (error) {

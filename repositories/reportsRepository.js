@@ -1,7 +1,7 @@
-import { toArrayChunk } from "../helpers/arrayHelper.js";
 import firestoreHelper from "../helpers/firestoreHelper.js";
 import { collection, doc, getDoc, getDocs, query, setDoc, updateDoc, where } from "firebase/firestore";
 import reportAttendanceDto from "../dto/reportAttendanceDto.js";
+import { getDateNow, getTimeNow } from "../helpers/dateHelper.js";
 
 const db = firestoreHelper();
 
@@ -10,9 +10,9 @@ export class reportsRepository {
     this.projectName = projectName;
   }
 
-  async findTodayByQrId(qrId) {
+  async findTodayById(qrId) {
     try {
-      const date = "2025-02-10";
+      const date = getDateNow();
       var docRef = doc(db, "Reports", this.projectName, date, qrId);
 
       const docSnap = await getDoc(docRef);
@@ -27,18 +27,18 @@ export class reportsRepository {
   }
 
   async takeAttendance(attendance) {
-    const date = "2025-02-10";
+    const date = getDateNow();
     var docRef = doc(
       db,
       "Reports",
       this.projectName,
       date,
-      attendance["QR Code ID"]
+      attendance.id
     );
 
     var reportAttendance = reportAttendanceDto(attendance);
     reportAttendance["Absen"] = "Hadir";
-    reportAttendance["Waktu Absen"] = "02:13:00";
+    reportAttendance["Waktu Absen"] = getTimeNow();
 
     await setDoc(docRef, reportAttendance);
   }

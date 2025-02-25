@@ -86,21 +86,22 @@ export class attendancesRepository {
 
   async findByQrId(qrId) {
     try {
-      var docRef = doc(
+      var result = [];
+      const colRef = collection(
         db,
         "Attendances",
         this.projectName,
-        "Attendances List",
-        qrId
+        "Attendances List"
       );
 
-      const docSnap = await getDoc(docRef);
+      const q = query(colRef, where("QR Code ID", "==", qrId));
+      const docSnap = await getDocs(q);
+      docSnap.forEach((doc) => {
+        result[doc.id] = doc.data();
+        result[doc.id]['id'] = doc.id;
+      });
 
-      if (docSnap.exists()) {
-        return docSnap.data();
-      }
-
-      return null;
+      return result;
     } catch (e) {
       console.error("Error repo find users by username: ", e);
     }
