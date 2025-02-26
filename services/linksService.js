@@ -69,22 +69,28 @@ export class linksService {
     try {
       const linksRepo = new linksRepository(req.user.projectName);
 
-      const currentActive = await linksRepo.getActive();
-      if (currentActive === null) {
+      const currentActive = await linksRepo.getActiveQuery();
+      var keys = Object.keys(currentActive);
+
+      if (keys.length == 0) {
         return res
           .status(400)
           .send(resultHelper(400, "There no current active link"));
       }
 
-      return res
-        .status(200)
-        .send(
-          resultHelper(
-            200,
-            "Success",
-            process.env.COUPON_BASE_URL + "l/" + currentActive
-          )
-        );
+      var activeLinks = [];
+      keys.forEach((item) => {
+        var body = {
+          date: currentActive[item].date,
+          startDate: currentActive[item].startDate,
+          endDate: currentActive[item].endDate,
+          link: process.env.COUPON_BASE_URL + "l/" + item,
+        };
+
+        activeLinks.push(body);
+      });
+
+      return res.status(200).send(resultHelper(200, "Success", activeLinks));
     } catch (error) {
       return res.status(400).send(resultHelper(400, "Failed get Active link"));
     }
@@ -112,6 +118,19 @@ export class linksService {
       }
 
       return res.status(400).send(resultHelper(400, "Active link not found"));
+    } catch (error) {
+      return res.status(400).send(resultHelper(400, "Failed get Active link"));
+    }
+  }
+
+  async inactive(req, res) {
+    try {
+      const linksRepo = new linksRepository(req.user.projectName);
+      var id = req.body.link.toString();
+      id = id.replace(process.env.COUPON_BASE_URL + "l/", "");
+      await linksRepo.inactive(id);
+
+      return res.status(200).send(resultHelper(200, "Success"));
     } catch (error) {
       return res.status(400).send(resultHelper(400, "Failed get Active link"));
     }

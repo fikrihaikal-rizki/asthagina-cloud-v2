@@ -35,21 +35,6 @@ export class linksRepository {
     }
   }
 
-  async getActive() {
-    try {
-      var result = null;
-      const link = await this.getActiveQuery();
-      var keys = Object.keys(link);
-      keys.forEach((item) => {
-        result = item;
-      });
-
-      return result;
-    } catch (e) {
-      console.error("Error get active link: ", e);
-    }
-  }
-
   async getActiveLinkByHours(start, end) {
     try {
       var result = null;
@@ -128,6 +113,15 @@ export class linksRepository {
       return link;
     } catch (e) {
       console.error("Error get link: ", e);
+    }
+  }
+
+  async inactive(id) {
+    try {
+      const docRef = doc(db, "Links", this.projectName, "Links List", id);
+      await updateDoc(docRef, { status: STATUS_INACTIVE });
+    } catch (e) {
+      console.error("Error revoke active link: ", e);
     }
   }
 }

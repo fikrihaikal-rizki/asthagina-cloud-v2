@@ -71,6 +71,11 @@ app.post("/links/get-active", verifyToken, async (req, res) => {
   return await service.getActive(req, res);
 });
 
+app.post("/links/inactive", verifyToken, async (req, res) => {
+  const service = new linksService();
+  return await service.inactive(req, res);
+});
+
 app.post("/links/verify", async (req, res) => {
   const service = new linksService();
   return await service.verify(req, res);
