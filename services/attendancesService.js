@@ -1,11 +1,10 @@
 import jsonwebtoken from "jsonwebtoken";
 import reportAttendanceDto from "../dto/reportAttendanceDto.js";
 import resultHelper from "../helpers/resultHelper.js";
-import { STATUS_ACTIVE } from "../helpers/statusHelper.js";
+import { STATUS_ACTIVE, STATUS_PRESENT } from "../helpers/statusHelper.js";
 import { attendancesRepository } from "../repositories/attendacesRepository.js";
 import { linksRepository } from "../repositories/linksRepository.js";
 import { reportsRepository } from "../repositories/reportsRepository.js";
-import { getDateTimeNow } from "../helpers/dateHelper.js";
 
 export class attendancesService {
   async take(req, res) {
@@ -29,10 +28,26 @@ export class attendancesService {
         return res.status(400).send(resultHelper(400, "Data not found!"));
       }
 
-      const reportsRepo = new reportsRepository(req.user.projectName);
+      const jwt = jsonwebtoken;
+      var decodeQr = jwt.verify(
+        attendance["QR Code ID"],
+        process.env.COUPON_KEY
+      );
+
+      decodeQr = decodeQr.split("|");
+      const linkId = decodeQr[1];
+
+      const linksRepo = new linksRepository(req.user.projectName);
+      const link = await linksRepo.getById(linkId);
+
+      const reportsRepo = new reportsRepository(req.user.projectName, link.date);
       const report = await reportsRepo.findTodayById(attendance.id);
 
-      if (report != null) {
+      if (report == null) {
+        return res.status(400).send(resultHelper(400, "Data not found!"));
+      }
+
+      if (report["Status"] == STATUS_PRESENT) {
         return res.status(400).send(resultHelper(400, "Already taken!"));
       }
 
@@ -81,9 +96,7 @@ export class attendancesService {
         const attendancesRepo = new attendancesRepository(
           currentActive.projectName
         );
-        const attendances = await attendancesRepo.findByPhoneNumber(
-          req.body.phone
-        );
+        const attendances = await attendancesRepo.findByEmail(req.body.email);
 
         var keys = Object.keys(attendances);
 
@@ -136,16 +149,36 @@ export class attendancesService {
       const id = split[1];
 
       const attendancesRepo = new attendancesRepository(projectName);
-      const attendance = await attendancesRepo.findId(id);
+      var attendance = await attendancesRepo.findId(id);
 
       if (attendance == null) {
-        return res.status(400).send(resultHelper(400, "Coupon not found"));
+        return res.status(400).send(resultHelper(400, "Attendance not found"));
       }
 
-      var report = reportAttendanceDto(attendance);
-      report["QR Code ID"] = attendance["QR Code ID"];
+      const jwt = jsonwebtoken;
+      var decodeQr = jwt.verify(
+        attendance["QR Code ID"],
+        process.env.COUPON_KEY
+      );
 
-      return res.status(200).send(resultHelper(200, "Success", report));
+      decodeQr = decodeQr.split("|");
+      const linkId = decodeQr[1];
+
+      const linksRepo = new linksRepository(projectName);
+      const link = await linksRepo.getById(linkId);
+
+      if (link == null) {
+        return res.status(400).send(resultHelper(400, "Link coupon not found"));
+      }
+
+      const reportRepo = new reportsRepository(projectName, link.date);
+      attendance.id = id;
+      await reportRepo.absenAttendance(attendance);
+
+      var attendanceData = reportAttendanceDto(attendance);
+      attendanceData["QR Code ID"] = attendance["QR Code ID"];
+
+      return res.status(200).send(resultHelper(200, "Success", attendanceData));
     } catch (error) {
       return res.status(400).send(resultHelper(400, "Failed find coupon"));
     }

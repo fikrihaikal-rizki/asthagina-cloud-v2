@@ -116,12 +116,19 @@ export class linksRepository {
     }
   }
 
-  async inactive(id) {
+  async getAllLinks() {
     try {
-      const docRef = doc(db, "Links", this.projectName, "Links List", id);
-      await updateDoc(docRef, { status: STATUS_INACTIVE });
+      var result = [];
+
+      const colRef = collection(db, "Links", this.projectName, "Links List");
+      const docSnap = await getDocs(colRef);
+      docSnap.forEach((doc) => {
+        result.push(doc.data());
+      });
+
+      return result;
     } catch (e) {
-      console.error("Error revoke active link: ", e);
+      console.error("Error get active link: ", e);
     }
   }
 }

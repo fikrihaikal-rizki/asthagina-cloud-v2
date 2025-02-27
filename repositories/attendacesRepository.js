@@ -147,7 +147,7 @@ export class attendancesRepository {
     return date;
   }
 
-  async findByPhoneNumber(phone) {
+  async findByEmail(email) {
     try {
       var result = [];
       const colRef = collection(
@@ -157,7 +157,7 @@ export class attendancesRepository {
         "Attendances List"
       );
 
-      const q = query(colRef, where("Nomor telepon", "==", phone));
+      const q = query(colRef, where("Email", "==", email));
       const docSnap = await getDocs(q);
       docSnap.forEach((doc) => {
         result[doc.id] = doc.data();
