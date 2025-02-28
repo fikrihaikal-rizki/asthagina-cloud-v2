@@ -10,6 +10,7 @@ import {
   getDoc,
 } from "firebase/firestore";
 import { STATUS_ACTIVE, STATUS_INACTIVE } from "../helpers/statusHelper.js";
+import { getDateTimeNow } from "../helpers/dateHelper.js";
 
 const db = firestoreHelper();
 
@@ -125,6 +126,17 @@ export class linksRepository {
       docSnap.forEach((doc) => {
         result.push(doc.data());
       });
+
+      return result;
+    } catch (e) {
+      console.error("Error get active link: ", e);
+    }
+  }
+
+  async inactive(id) {
+    try {
+      const colRef = doc(db, "Links", this.projectName, "Links List", id);
+      await updateDoc(colRef, { status: STATUS_INACTIVE });
 
       return result;
     } catch (e) {

@@ -74,8 +74,8 @@ export class linksService {
 
       if (keys.length == 0) {
         return res
-          .status(400)
-          .send(resultHelper(400, "There no current active link"));
+          .status(200)
+          .send(resultHelper(200, "There no current active link", []));
       }
 
       var activeLinks = [];
@@ -128,6 +128,7 @@ export class linksService {
       const linksRepo = new linksRepository(req.user.projectName);
       var id = req.body.link.toString();
       id = id.replace(process.env.COUPON_BASE_URL + "l/", "");
+
       await linksRepo.inactive(id);
 
       return res.status(200).send(resultHelper(200, "Success"));
