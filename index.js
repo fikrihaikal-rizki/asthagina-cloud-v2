@@ -8,6 +8,7 @@ import { reportsService } from "./services/reportsService.js";
 import { linksService } from "./services/linksService.js";
 
 import cors from "cors";
+import { getDateTimeNow } from "./helpers/dateHelper.js";
 
 const app = express();
 const port = process.env.APP_PORT || 9005;
@@ -87,7 +88,7 @@ app.post("/links/verify", async (req, res) => {
 });
 
 app.listen(port, () => {
-  console.log("Runnning at port " + port);
+  console.log("Runnning at port " + port + " " + getDateTimeNow());
 });
 
 // import { Auth, google } from "googleapis";
