@@ -9,42 +9,53 @@ import { reportsRepository } from "../repositories/reportsRepository.js";
 export class attendancesService {
   async take(req, res) {
     try {
-      const attendancesRepo = new attendancesRepository(req.user.projectName);
-      const attendances = await attendancesRepo.findByQrId(req.body.qrId);
-
-      var keys = Object.keys(attendances);
-
-      if (keys.length == 0) {
-        return res.status(400).send(resultHelper(400, "Data not found!"));
-      }
-
-      var attendance = null;
-      keys.forEach((item) => {
-        attendance = attendances[item];
-        attendance.id = item;
-      });
-
-      if (attendance == null) {
-        return res.status(400).send(resultHelper(400, "Data not found!"));
-      }
-
       const jwt = jsonwebtoken;
-      var decodeQr = jwt.verify(
-        attendance["QR Code ID"],
-        process.env.COUPON_KEY
-      );
+      var decodeQr = jwt.verify(req.body.qrId, process.env.COUPON_KEY);
+
+      if (!decodeQr.includes("|")) {
+        return res
+          .status(400)
+          .send(resultHelper(400, "Invalid QR Code format"));
+      }
 
       decodeQr = decodeQr.split("|");
+      const attendanceId = decodeQr[0];
       const linkId = decodeQr[1];
+      const projectName = decodeQr[2];
+
+      if (projectName != req.user.projectName) {
+        return res
+          .status(400)
+          .send(
+            resultHelper(400, "Invalid QR Code for " + req.user.projectName)
+          );
+      }
+
+      const attendancesRepo = new attendancesRepository(req.user.projectName);
+      const attendance = await attendancesRepo.findId(attendanceId);
+      if (attendance == null) {
+        return res
+          .status(400)
+          .send(resultHelper(400, "Attendance not registered"));
+      }
 
       const linksRepo = new linksRepository(req.user.projectName);
       const link = await linksRepo.getById(linkId);
+      if (link == null) {
+        return res.status(400).send(resultHelper(400, "Invalid Coupon link"));
+      }
 
-      const reportsRepo = new reportsRepository(req.user.projectName, link.date);
+      const reportsRepo = new reportsRepository(
+        req.user.projectName,
+        link.date
+      );
       const report = await reportsRepo.findTodayById(attendance.id);
-
       if (report == null) {
-        return res.status(400).send(resultHelper(400, "Data not found!"));
+        return res.status(400).send(resultHelper(400, "Attendance not generate Coupon"));
+      }
+
+      if (report["QR Code ID"] != req.body.qrId) {
+        return res.status(400).send(resultHelper(400, "Inactive Coupon Qr Code"));
       }
 
       if (report["Status"] == STATUS_PRESENT) {
@@ -55,6 +66,7 @@ export class attendancesService {
       return res
         .status(200)
         .send(resultHelper(200, "Success", reportAttendanceDto(attendance)));
+
     } catch (error) {
       return res
         .status(400)
@@ -85,7 +97,9 @@ export class attendancesService {
       }
 
       if (currentActive.status != STATUS_ACTIVE) {
-        return res.status(400).send(resultHelper(400, "Active link not found"));
+        return res
+          .status(400)
+          .send(resultHelper(400, "Link has been inactive"));
       }
 
       const linkStartDate = new Date(currentActive.startDate);
@@ -101,13 +115,13 @@ export class attendancesService {
         var keys = Object.keys(attendances);
 
         if (keys.length == 0) {
-          return res.status(400).send(resultHelper(400, "Data not found"));
+          return res.status(400).send(resultHelper(400, "Data not registered"));
         }
 
         if (keys.length > 1) {
           return res
             .status(400)
-            .send(resultHelper(400, "Multiple phone number usage"));
+            .send(resultHelper(400, "Multiple email address usage"));
         }
 
         const jwt = jsonwebtoken;
@@ -152,7 +166,7 @@ export class attendancesService {
       var attendance = await attendancesRepo.findId(id);
 
       if (attendance == null) {
-        return res.status(400).send(resultHelper(400, "Attendance not found"));
+        return res.status(400).send(resultHelper(400, "Data not registered"));
       }
 
       const jwt = jsonwebtoken;
@@ -173,10 +187,12 @@ export class attendancesService {
 
       const reportRepo = new reportsRepository(projectName, link.date);
       attendance.id = id;
+      attendance["QR Code ID"] = attendance["QR Code ID"];
       await reportRepo.absenAttendance(attendance);
 
       var attendanceData = reportAttendanceDto(attendance);
       attendanceData["QR Code ID"] = attendance["QR Code ID"];
+      attendanceData.linkDate = link.date;
 
       return res.status(200).send(resultHelper(200, "Success", attendanceData));
     } catch (error) {

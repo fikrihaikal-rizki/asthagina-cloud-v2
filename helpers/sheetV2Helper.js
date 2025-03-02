@@ -7,8 +7,6 @@ const auth = new Auth.GoogleAuth({
 const client = await auth.getClient();
 const googleSheets = google.sheets({ version: "v4", auth: client });
 
-// const spreadsheetId = process.env.SHEET_MAIN_ID;
-
 const loopLimit = process.env.SHEET_LOOP_LIMIT;
 var sheetId = "";
 var index = 0;
@@ -23,6 +21,14 @@ function setRange(
   startRow = null,
   endRow = null
 ) {
+  if (startRow == null) {
+    startRow = "";
+  }
+
+  if (endRow == null) {
+    endRow = "";
+  }
+
   return sheetName + "!" + firstColumn + startRow + ":" + lastColumn + endRow;
 }
 
@@ -61,12 +67,51 @@ export async function getSheetValue(
   startRow = null,
   endRow = null
 ) {
+  console.log(setRange(sheetName, firstColumn, lastColumn, startRow, endRow));
   var result = [];
-  const getRows = await googleSheets.spreadsheets.values.get({
-    auth,
-    sheetId,
+  const request = {
+    auth: auth,
+    spreadsheetId: sheetId,
     range: setRange(sheetName, firstColumn, lastColumn, startRow, endRow),
-  });
+  };
+
+  const getRows = await googleSheets.spreadsheets.values.get(request);
   console.log(getRows);
   return result;
 }
+
+export async function newReportSheet(sheetName) {
+  const request = {
+    auth: auth,
+    spreadsheetId: sheetId,
+    resource: {
+      requests: {
+        duplicateSheet: {
+          sourceSheetId: 1776101743,
+          newSheetName: sheetName,
+        },
+      },
+    },
+  };
+
+  const copySheet = await googleSheets.spreadsheets.batchUpdate(request);
+  return copySheet.status == 200 ? true : false;
+}
+
+// export async function newReportSheet(sheetName) {
+//   const request = {
+//     auth: auth,
+//     spreadsheetId: sheetId,
+//     resource: {
+//       requests: {
+//         duplicateSheet: {
+//           sourceSheetId: 1776101743,
+//           newSheetName: sheetName,
+//         },
+//       },
+//     },
+//   };
+
+//   const copySheet = await googleSheets.spreadsheets.batchUpdate(request);
+//   return copySheet.status == 200 ? true : false;
+// }

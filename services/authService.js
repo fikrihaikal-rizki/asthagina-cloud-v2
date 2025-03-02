@@ -27,7 +27,9 @@ export class authService {
     var body = { username: user.username, projectName: user.projectName };
     var token = jwt.sign(body, secret);
 
-    return res.status(200).send(resultHelper(200, "Success", token));
+    return res
+      .status(200)
+      .send(resultHelper(200, "Success", { token: token, role: user.role }));
   }
 }
 
@@ -61,4 +63,33 @@ export const verifyHash = (req, res, next) => {
     req.user = decoded;
     next();
   });
+};
+
+export const verifyUserAdmin = async (req, res, next) => {
+  var credentials = req.headers["authorization"];
+  if (!credentials) {
+    return res.status(401).json({ error: "Unauthorized" });
+  }
+
+  const auth = new Buffer.from(credentials.split(" ")[1], "base64")
+    .toString()
+    .split(":");
+  const username = auth[0];
+  const password = auth[1];
+
+  const usersRepo = new usersRepository();
+  var user = await usersRepo.findByUsername(username);
+  if (user == null) {
+    return res.status(401).send(resultHelper(401, "Unautorized"));
+  }
+
+  if (user.password != password) {
+    return res.status(401).send(resultHelper(401, "Unautorized"));
+  }
+
+  if (user.role != "Admin") {
+    return res.status(401).send(resultHelper(401, "Unautorized"));
+  }
+
+  next();
 };

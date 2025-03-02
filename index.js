@@ -2,13 +2,19 @@ import "dotenv/config";
 import bodyParser from "body-parser";
 import express from "express";
 import { syncService } from "./services/syncService.js";
-import { authService, verifyHash, verifyToken } from "./services/authService.js";
+import {
+  authService,
+  verifyHash,
+  verifyToken,
+  verifyUserAdmin,
+} from "./services/authService.js";
 import { attendancesService } from "./services/attendancesService.js";
 import { reportsService } from "./services/reportsService.js";
 import { linksService } from "./services/linksService.js";
 
 import cors from "cors";
 import { getDateTimeNow } from "./helpers/dateHelper.js";
+import { dataService } from "./services/dataService.js";
 
 const app = express();
 const port = process.env.APP_PORT || 9005;
@@ -85,6 +91,11 @@ app.post("/links/inactive", verifyToken, async (req, res) => {
 app.post("/links/verify", async (req, res) => {
   const service = new linksService();
   return await service.verify(req, res);
+});
+
+app.post("/data/migration", verifyUserAdmin, async (req, res) => {
+  const service = new dataService();
+  return await service.migration(res);
 });
 
 app.listen(port, () => {

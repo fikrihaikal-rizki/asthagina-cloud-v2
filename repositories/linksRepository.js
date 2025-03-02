@@ -36,7 +36,7 @@ export class linksRepository {
     }
   }
 
-  async getActiveLinkByHours(start, end) {
+  async getActiveLinkByHours(date, start, end) {
     try {
       var result = null;
       const startDate = new Date(start);
@@ -45,15 +45,18 @@ export class linksRepository {
       const link = await this.getActiveQuery();
       var keys = Object.keys(link);
       keys.forEach((item) => {
+        var linkDate = link[item].date;
         var linkStartDate = new Date(link[item].startDate);
         var linkEndDate = new Date(link[item].endDate);
 
-        if (startDate >= linkStartDate && startDate <= linkEndDate) {
-          result = link[item];
-        }
+        if (linkDate == date) {
+          if (startDate >= linkStartDate && startDate <= linkEndDate) {
+            result = link[item];
+          }
 
-        if (endDate >= linkStartDate && endDate <= linkEndDate) {
-          result = link[item];
+          if (endDate >= linkStartDate && endDate <= linkEndDate) {
+            result = link[item];
+          }
         }
       });
 
@@ -87,15 +90,29 @@ export class linksRepository {
 
   async getById(id) {
     try {
+      var link = null;
       var linkRef = collection(db, "Links");
       var linkSnap = await getDocs(linkRef);
+
+      if (this.projectName != null || this.projectName != "") {
+        const docRef = doc(db, "Links", this.projectName, "Links List", id);
+        const docSnap = await getDoc(docRef);
+
+        if (docSnap.exists()) {
+          link = docSnap.data();
+          link.projectName = this.projectName;
+
+          return link;
+        }
+
+        return null;
+      }
 
       var projects = [];
       linkSnap.forEach((doc) => {
         projects.push(doc.id);
       });
 
-      var link = null;
       for (const project of projects) {
         const docRef = doc(db, "Links", project, "Links List", id);
         const docSnap = await getDoc(docRef);

@@ -1,4 +1,5 @@
 import resultHelper from "../helpers/resultHelper.js";
+import { getSheetValue, newReportSheet, setInitSheet } from "../helpers/sheetV2Helper.js";
 import { STATUS_GENERATING } from "../helpers/statusHelper.js";
 import { attendancesRepository } from "../repositories/attendacesRepository.js";
 import { linksRepository } from "../repositories/linksRepository.js";
@@ -13,13 +14,27 @@ export class reportsService {
         req.user.projectName
       );
 
-      const reportsRepo = new reportsRepository(req.user.projectName);
-      await reportsRepo.setSyncStatus(STATUS_GENERATING);
-      const report = await reportsRepo.findAllPresent(req.body.date);
+      if (project == null) {
+        return res.status(400).send(resultHelper(400, "No Project found!"));
+      }
 
-      var keys = Object.keys(report);
-      const attendacesRepo = new attendancesRepository(req.user.projectName);
-      await att;
+      const reportDate = req.body.date;
+
+      setInitSheet(project.sheetReportId);
+      const newsheet = await newReportSheet(reportDate);
+
+      if (!newsheet) {
+        return res.status(400).send(resultHelper(400, "Failed Create Sheet Report!"));
+      }
+
+      const reportsRepo = new reportsRepository(project.projectName);
+      await reportsRepo.setSyncStatus(STATUS_GENERATING);
+      const report = await reportsRepo.findAllPresent(reportDate);
+      
+
+      // var keys = Object.keys(report);
+      // const attendacesRepo = new attendancesRepository(req.user.projectName);
+      // await att;
 
       // if (report != null) {
       //   return res.status(400).send(resultHelper(400, "Already taken"));

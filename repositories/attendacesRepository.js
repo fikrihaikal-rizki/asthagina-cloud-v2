@@ -98,7 +98,7 @@ export class attendancesRepository {
       const docSnap = await getDocs(q);
       docSnap.forEach((doc) => {
         result[doc.id] = doc.data();
-        result[doc.id]['id'] = doc.id;
+        result[doc.id]["id"] = doc.id;
       });
 
       return result;
@@ -120,7 +120,9 @@ export class attendancesRepository {
       const docSnap = await getDoc(docRef);
 
       if (docSnap.exists()) {
-        return docSnap.data();
+        var data = docSnap.data();
+        data.id = id;
+        return data;
       }
 
       return null;
@@ -161,7 +163,7 @@ export class attendancesRepository {
       const docSnap = await getDocs(q);
       docSnap.forEach((doc) => {
         result[doc.id] = doc.data();
-        result[doc.id]['id'] = doc.id;
+        result[doc.id]["id"] = doc.id;
       });
 
       return result;

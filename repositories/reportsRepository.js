@@ -38,12 +38,19 @@ export class reportsRepository {
 
   async absenAttendance(attendance) {
     try {
-      var docRef = doc(db, "Reports", this.projectName, this.reportDate, attendance.id);
+      var docRef = doc(
+        db,
+        "Reports",
+        this.projectName,
+        this.reportDate,
+        attendance.id
+      );
 
       var reportAttendance = reportAttendanceDto(attendance);
       reportAttendance["Status"] = STATUS_ABSEN;
       reportAttendance["Waktu Absen"] = getDateTimeNow();
       reportAttendance["Waktu Hadir"] = "";
+      reportAttendance["QR Code ID"] = attendance["QR Code ID"];
 
       await setDoc(docRef, reportAttendance);
     } catch (error) {
@@ -60,11 +67,11 @@ export class reportsRepository {
       attendance.id
     );
 
-    var reportAttendance = reportAttendanceDto(attendance);
-    reportAttendance["Status"] = STATUS_PRESENT;
-    reportAttendance["Waktu Hadir"] = getDateTimeNow();
-
-    await updateDoc(docRef, reportAttendance);
+    var dateTimeNow = getDateTimeNow();
+    await updateDoc(docRef, {
+      Status: STATUS_PRESENT,
+      "Waktu Hadir": dateTimeNow,
+    });
   }
 
   async setSyncStatus(status) {
