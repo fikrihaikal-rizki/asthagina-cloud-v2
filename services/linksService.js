@@ -15,7 +15,7 @@ export class linksService {
     try {
       const linksRepo = new linksRepository(req.user.projectName);
       var links = linksDto(req);
-      console.log(links);
+
       const currentActive = await linksRepo.getActiveLinkByHours(
         links.date,
         links.startDate,
@@ -115,7 +115,6 @@ export class linksService {
       const linkEndDate = new Date(currentActive.endDate);
       const requestTime = new Date();
 
-      console.log(requestTime >= linkStartDate && requestTime <= linkEndDate);
       if (requestTime >= linkStartDate && requestTime <= linkEndDate) {
         return res.status(200).send(resultHelper(200, "Succes", currentActive));
       }
