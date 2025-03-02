@@ -91,22 +91,26 @@ export class linksRepository {
   async getById(id) {
     try {
       var link = null;
-      var linkRef = collection(db, "Links");
-      var linkSnap = await getDocs(linkRef);
 
-      if (this.projectName != null || this.projectName != "") {
-        const docRef = doc(db, "Links", this.projectName, "Links List", id);
-        const docSnap = await getDoc(docRef);
-
-        if (docSnap.exists()) {
-          link = docSnap.data();
+      if (this.projectName != null && this.projectName != "") {
+        const linkProjectRef = doc(
+          db,
+          "Links",
+          this.projectName,
+          "Links List",
+          id
+        );
+        const linkProjectSnap = await getDoc(linkProjectRef);
+        if (linkProjectSnap.exists()) {
+          link = linkProjectSnap.data();
           link.projectName = this.projectName;
-
           return link;
         }
-
         return null;
       }
+
+      var linkRef = collection(db, "Links");
+      var linkSnap = await getDocs(linkRef);
 
       var projects = [];
       linkSnap.forEach((doc) => {
