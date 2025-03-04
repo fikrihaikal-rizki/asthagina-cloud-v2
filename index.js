@@ -73,6 +73,11 @@ app.post("/reports/get-date", verifyToken, async (req, res) => {
   return await service.getDate(req, res);
 });
 
+app.post("/reports/summary", verifyToken, async (req, res) => {
+  const service = new reportsService();
+  return await service.summary(req, res);
+});
+
 app.post("/links/generate", verifyToken, async (req, res) => {
   const service = new linksService();
   return await service.generate(req, res);

@@ -27,9 +27,11 @@ export class authService {
     var body = { username: user.username, projectName: user.projectName };
     var token = jwt.sign(body, secret);
 
+    var encodedRole = Buffer.from(user.role.padEnd(10, "0")).toString("base64");
+
     return res
       .status(200)
-      .send(resultHelper(200, "Success", { token: token, role: user.role }));
+      .send(resultHelper(200, "Success", { token: token + encodedRole }));
   }
 }
 

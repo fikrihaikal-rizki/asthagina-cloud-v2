@@ -2,6 +2,7 @@ import firestoreHelper from "../helpers/firestoreHelper.js";
 import {
   collection,
   doc,
+  getCountFromServer,
   getDoc,
   getDocs,
   query,
@@ -98,5 +99,23 @@ export class reportsRepository {
     });
 
     return date;
+  }
+
+  async getSummaryPresent() {
+    var docRef = collection(db, "Reports", this.projectName, this.reportDate);
+
+    const q = query(docRef, where("Status", "==", "Hadir"));
+    const querySnapshot = await getCountFromServer(q);
+
+    return querySnapshot.data().count;
+  }
+
+  async getSummaryAbsen() {
+    var docRef = collection(db, "Reports", this.projectName, this.reportDate);
+
+    const q = query(docRef, where("Status", "==", "Absen"));
+    const querySnapshot = await getCountFromServer(q);
+
+    return querySnapshot.data().count;
   }
 }
